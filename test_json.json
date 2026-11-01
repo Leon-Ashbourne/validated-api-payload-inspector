@@ -1,9 +1,9 @@
 {
     "id": 104,
-    "email": "sales@logisticsplus.net",
-    "contact_info": "P.O. Box 4521, Sector 9",
+    "email": "sales@logistic",
+    "contact_info": 145,
     "mobile": "+91-9876543210",
     "owner": ["Eve Adams", "Frank Wright", "Grace Lee"],
     "has_app": false,
-    "contact_permits": true
-  }
+    "contact_permits": 12
+}

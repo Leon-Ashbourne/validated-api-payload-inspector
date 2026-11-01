@@ -42,28 +42,39 @@ class Company(BaseModel):
     has_app: bool = False
     contact_permits: bool | None = None
 
-def log_file_error_handler():
+def log_file_error_handler(exc, msg: str = "File Not Found"):
     try:
-        logger.debug("Bad JSON: {0}".format(err))
+        logger.debug("{0}: {1}".format(msg, exc))
     except NameError:
-        raise FileNotFoundError
+        raise exc
+    
     sys.exit(66)
 
 try:
     with open(args.filename, "r") as file:
         json_payload = json.load(file)
-except FileNotFoundError as err:
+except FileNotFoundError as exc:
     print("File Not Found: Please give a proper existing json file. For more details refer to your errors.log file if present")
-    log_file_error_handler()
+    log_file_error_handler(exc)
+
+except IsADirectoryError as exc:
+    print("Required a JSON File: The provided file is a directory. A JSON file is required. For more details refer to errors.log if present.")
+    log_file_error_handler(exc, "Required a JSON File")
 
 except Exception as exc:
-    print("Unknown Error: Refer to the errors.log for more details if present")
-    log_file_error_handler()
+    print("Unknown Error: Incorrect file or the file contains invalid JSON. Refer to the errors.log for more details if present")
+    log_file_error_handler(exc, "Unknown Error")
 
 try:
     company = Company.model_validate(json_payload)
     print("Valid Fields!")
     sys.exit(0)
-except ValidationError as err:
-    print(err)
+except ValidationError as errors:
+    print("Invalid Data. The following fields have incorrect types:")
+    for err in errors.errors():
+        for x in zip(err):
+            key = x[0]
+            if key == "url" or key == "type": continue
+            print("{0} : {1}".format(x[0], err[x[0]]))
+        print('\n')
     sys.exit(1)
