@@ -2,10 +2,11 @@ import argparse
 import logging
 import os
 import json
+import sys
 
 from pathlib import Path
 from typing import Annotated
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, EmailStr
+from pydantic import BaseModel, Field, ValidationError, EmailStr
 
 parser = argparse.ArgumentParser(
     prog='cli',
@@ -41,20 +42,28 @@ class Company(BaseModel):
     has_app: bool = False
     contact_permits: bool | None = None
 
+def log_file_error_handler():
+    try:
+        logger.debug("Bad JSON: {0}".format(err))
+    except NameError:
+        raise FileNotFoundError
+    sys.exit(66)
 
 try:
     with open(args.filename, "r") as file:
         json_payload = json.load(file)
-except (FileNotFoundError, Exception) as err:
-    print("Please give a proper existing json file. For more details check your errors.log file if present")
-    if logger: logger.debug("Bad JSON: {0}".format(err))
-    else: raise
+except FileNotFoundError as err:
+    print("File Not Found: Please give a proper existing json file. For more details refer to your errors.log file if present")
+    log_file_error_handler()
 
+except Exception as exc:
+    print("Unknown Error: Refer to the errors.log for more details if present")
+    log_file_error_handler()
 
 try:
     company = Company.model_validate(json_payload)
-    print(company)
+    print("Valid Fields!")
+    sys.exit(0)
 except ValidationError as err:
     print(err)
-except NameError as exc:
-    pass
+    sys.exit(1)
